@@ -1,0 +1,90 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: jenkins
+  template: jenkins-agent-vault-template
+metadata:
+  name: jenkins-agent-vault-template
+objects:
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: jenkins-agent-${AGENT_NAME}-configmap
+    labels:
+      role: jenkins-slave
+  data:
+    template1: |-
+      <org.csanchez.jenkins.plugins.kubernetes.PodTemplate>
+        <name>${AGENT_NAME}</name>
+        <label>${AGENT_NAME}</label>
+        <serviceAccount>${SERVICEACCOUNT_NAME}</serviceAccount>
+        <idleMinutes>${IDLE_TIMEOUT}</idleMinutes>
+        <instanceCap>${INSTANCE_CAP}</instanceCap>
+        # Add freeform when attribute not exposed
+        <yaml>
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            labels:
+              app: jenkins
+        </yaml>        
+        <containers>
+          <org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+            <name>${AGENT_NAME}-container</name>
+            <image>${IMAGE_URL}</image>
+            <alwaysPullImage>${ALWAYS_PULL_IMAGE}</alwaysPullImage>
+            <workingDir>${WORKING_DIR}</workingDir>
+            <resourceRequestCpu>${CPU_REQUEST}</resourceRequestCpu>
+            <resourceRequestMemory>${MEMORY_REQUEST}</resourceRequestMemory>
+            <resourceLimitCpu>${CPU_LIMIT}</resourceLimitCpu>
+            <resourceLimitMemory>${MEMORY_LIMIT}</resourceLimitMemory>
+            <command></command>
+            <args>${computer.jnlpmac} ${computer.name}</args>
+          </org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+        </containers>
+      </org.csanchez.jenkins.plugins.kubernetes.PodTemplate>
+parameters:
+- name: AGENT_NAME
+  description: Agent name and label
+  displayName: Agent name/label
+  value: "vault"
+- name: SERVICEACCOUNT_NAME
+  displayName: Jenkins ServiceAccount Name
+  description: Name of service account designated to run Jenkins masters and agents.
+  value: "jenkins"
+- name: IMAGE_URL
+  description: Container image URL for this agent.
+  displayName: Jenkins Agent Image
+  value: "image-registry.openshift-image-registry.svc:5000/default/jenkins-vault-agent"
+- name: MEMORY_LIMIT
+  description: Maximum amount of memory allowed
+  displayName: Memory Limit
+  value: "512Mi"
+- name: MEMORY_REQUEST
+  description: Amount of memory requested
+  displayName: Memory Request
+  value: "2Gi"
+- name: CPU_LIMIT
+  description: Maximum amount of CPU allowed
+  displayName: CPU Limit
+  value: "500m"
+- name: CPU_REQUEST
+  description: Maximum amount of CPU allowed
+  displayName: CPU Limit
+  value: "50m"
+- name: IDLE_TIMEOUT
+  description: Time to linger awaiting more work
+  displayName: Time to linger awaiting more work
+  value: "15"
+- name: ALWAYS_PULL_IMAGE
+  description: Force check for updated image in registry.
+  displayName: Always Pull Image
+  value: "true"
+- name: WORKING_DIR
+  description: Runtime working directory.
+  displayName: Container Working Directory
+  value: "/tmp"
+- name: INSTANCE_CAP
+  description: Max number of agent to allow running concurrently.
+  displayName: Max agent count
+  value: "4"

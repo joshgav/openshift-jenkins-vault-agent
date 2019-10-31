@@ -1,0 +1,7 @@
+file:
+  /usr/bin/jq:
+    exists: true
+command:
+  check_vault_installed_in_path:
+    exec: 'vault version'
+    exit-status: 0
