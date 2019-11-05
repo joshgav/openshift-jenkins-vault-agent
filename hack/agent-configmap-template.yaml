@@ -20,6 +20,11 @@ objects:
         <serviceAccount>${SERVICEACCOUNT_NAME}</serviceAccount>
         <idleMinutes>${IDLE_TIMEOUT}</idleMinutes>
         <instanceCap>${INSTANCE_CAP}</instanceCap>
+        <imagePullSecrets>
+          <org.csanchez.jenkins.plugins.kubernetes.PodImagePullSecret>
+            <name>${IMAGE_PULL_SECRET}</name>
+          </org.csanchez.jenkins.plugins.kubernetes.PodImagePullSecret>
+        </imagePullSecrets>
         # Add freeform when attribute not exposed
         <yaml>
           apiVersion: v1
@@ -40,6 +45,12 @@ objects:
             <resourceLimitMemory>${MEMORY_LIMIT}</resourceLimitMemory>
             <command></command>
             <args>${computer.jnlpmac} ${computer.name}</args>
+            <envVars>
+              <org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+                <key>HOME</key>
+                <value>/tmp</value>
+              </org.csanchez.jenkins.plugins.kubernetes.PodEnvVar>
+            </envVars>
           </org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
         </containers>
       </org.csanchez.jenkins.plugins.kubernetes.PodTemplate>
@@ -55,7 +66,11 @@ parameters:
 - name: IMAGE_URL
   description: Container image URL for this agent.
   displayName: Jenkins Agent Image
-  value: "image-registry.openshift-image-registry.svc:5000/default/jenkins-vault-agent"
+  value: "image-registry.openshift-image-registry.svc:5000/vault-ns/jenkins-vault-agent"
+- name: IMAGE_PULL_SECRET
+  description: dockerconfigjson secret for registry in this namespace
+  displayName: Image pull secret
+  value: "openshift-internal-registry"
 - name: MEMORY_LIMIT
   description: Maximum amount of memory allowed
   displayName: Memory Limit
@@ -63,7 +78,7 @@ parameters:
 - name: MEMORY_REQUEST
   description: Amount of memory requested
   displayName: Memory Request
-  value: "2Gi"
+  value: "512Mi"
 - name: CPU_LIMIT
   description: Maximum amount of CPU allowed
   displayName: CPU Limit
@@ -71,7 +86,7 @@ parameters:
 - name: CPU_REQUEST
   description: Maximum amount of CPU allowed
   displayName: CPU Limit
-  value: "50m"
+  value: "500m"
 - name: IDLE_TIMEOUT
   description: Time to linger awaiting more work
   displayName: Time to linger awaiting more work
